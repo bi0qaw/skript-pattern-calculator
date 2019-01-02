@@ -1,4 +1,4 @@
-import Browser exposing (Document)
+import Browser
 import Html exposing (..)
 import Html.Events exposing (onInput)
 import Html.Attributes exposing (placeholder, value, size)
