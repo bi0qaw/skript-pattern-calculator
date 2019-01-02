@@ -6420,6 +6420,15 @@ var elm$html$Html$code = _VirtualDom_node('code');
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var elm$json$Json$Encode$string = _Json_wrap;
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
 var author$project$Main$combinationsHtml = function (model) {
 	var patterns = function () {
 		var _n0 = model.show;
@@ -6436,7 +6445,10 @@ var author$project$Main$combinationsHtml = function (model) {
 	var str = A3(elm$core$List$foldr, elm$core$Basics$append, '', lines);
 	return A2(
 		elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('combinations')
+			]),
 		_List_fromArray(
 			[
 				A2(
@@ -6487,14 +6499,6 @@ var elm$html$Html$Attributes$cols = function (n) {
 		'cols',
 		elm$core$String$fromInt(n));
 };
-var elm$json$Json$Encode$string = _Json_wrap;
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
 var elm$html$Html$Attributes$rows = function (n) {
 	return A2(
@@ -6541,13 +6545,19 @@ var elm$html$Html$Events$onInput = function (tagger) {
 var author$project$Main$view = function (model) {
 	return A2(
 		elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('main')
+			]),
 		_List_fromArray(
 			[
 				elm$html$Html$text('Pattern'),
 				A2(
 				elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('pattern_input')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -6567,7 +6577,8 @@ var author$project$Main$view = function (model) {
 				elm$html$Html$div,
 				_List_fromArray(
 					[
-						elm$html$Html$Attributes$title(author$project$Main$showTitle)
+						elm$html$Html$Attributes$title(author$project$Main$showTitle),
+						elm$html$Html$Attributes$class('show')
 					]),
 				_List_fromArray(
 					[
@@ -6604,7 +6615,10 @@ var author$project$Main$view = function (model) {
 					])),
 				A2(
 				elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('output_limit')
+					]),
 				_List_fromArray(
 					[
 						elm$html$Html$text('Limit output to: '),
@@ -6622,7 +6636,10 @@ var author$project$Main$view = function (model) {
 				A2(elm$html$Html$hr, _List_Nil, _List_Nil),
 				A2(
 				elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('all_combinations_count')
+					]),
 				_List_fromArray(
 					[
 						elm$html$Html$text(
@@ -6630,7 +6647,10 @@ var author$project$Main$view = function (model) {
 					])),
 				A2(
 				elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('until_first_required_count')
+					]),
 				_List_fromArray(
 					[
 						elm$html$Html$text(

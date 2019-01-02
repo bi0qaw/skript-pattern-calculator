@@ -1,7 +1,7 @@
 import Browser
 import Html exposing (..)
 import Html.Events exposing (onInput)
-import Html.Attributes exposing (placeholder, title, value, cols, rows, name, readonly)
+import Html.Attributes exposing (placeholder, title, value, cols, rows, name, readonly, class)
 import Set exposing (Set)
 import Parser as P exposing (Parser, (|.), (|=))
 
@@ -532,9 +532,9 @@ updateModel model pattern =
 
 view : Model -> Html Msg
 view model =
-  div []
+  div [ class "main" ]
     [ text "Pattern"
-    , div [] 
+    , div [ class "pattern_input" ] 
       [ textarea 
         [ placeholder "pattern"
         , cols textareaCols
@@ -544,20 +544,20 @@ view model =
         ]
         []
       ]
-    , div [ title showTitle ] 
+    , div [ title showTitle , class "show" ] 
       [ text "Show: "
       , select [ onInput ChangeShow ] 
           [ option [ value "all" ] [ text "All" ]
           , option [ value "until_first_required" ] [ text "Until First Required" ]
           ]
       ]
-    , div []
+    , div [ class "output_limit" ]
         [ text "Limit output to: " 
         , input [ placeholder "limit", value (String.fromInt model.limit), onInput LimitChange ] []
         ]
     , hr [] []
-    , div [] [ text ("All Combinations: " ++ (String.fromInt model.count)) ]
-    , div [] [ text ("Until First Required Combinations: " ++ (String.fromInt model.countUntilRequired)) ]
+    , div [ class "all_combinations_count" ] [ text ("All Combinations: " ++ (String.fromInt model.count)) ]
+    , div [ class "until_first_required_count" ] [ text ("Until First Required Combinations: " ++ (String.fromInt model.countUntilRequired)) ]
     , hr [] []
     , combinationsHtml model
     ]
@@ -598,8 +598,7 @@ combinationsHtml model =
     lines = List.intersperse "\n" patterns
     str = List.foldr (++) "" lines
   in
-    -- div [] [ textarea [ value str , cols textareaCols, rows (1 + (List.length patterns)), readonly True ] [] ]
-    div [] [ code [] (List.map (\p -> text p) lines) ]
+    div [ class "combinations" ] [ code [] (List.map (\p -> text p) lines) ]
 
 
 patternInputRows : Model -> Int
