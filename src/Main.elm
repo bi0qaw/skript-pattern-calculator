@@ -1,7 +1,7 @@
 import Browser
 import Html exposing (..)
 import Html.Events exposing (onInput)
-import Html.Attributes exposing (placeholder, value, size)
+import Html.Attributes exposing (placeholder, value, cols, rows)
 import Set exposing (Set)
 import Parser as P exposing (Parser, (|.), (|=))
 
@@ -198,6 +198,37 @@ andCombinations lefts rights =
       List.append 
         (List.map (\r -> And l r) rights)
         (andCombinations ls rights)
+
+
+toList : Pattern -> List Pattern
+toList pattern =
+  case pattern of
+    Empty ->
+      []
+
+    And left right ->
+      List.append (toList left) (toList right)
+
+    _ ->
+      [pattern]
+
+
+untilFirstRequired : Pattern -> Pattern
+untilFirstRequired pattern =
+  reduceAndSequence (untilFirstHelper (toList pattern))
+
+
+untilFirstHelper : List Pattern -> List Pattern
+untilFirstHelper patterns =
+  case patterns of
+    [] -> 
+      []
+
+    (Optional _) :: _ ->
+      []
+
+    p :: ps ->
+      p :: (untilFirstHelper ps)
 
 
 -- Parser
@@ -463,19 +494,25 @@ update msg model =
 view : Model -> Html Msg
 view model =
   div []
-    [ div []
-        [ text "Pattern: "
-        , input [ placeholder "pattern", value model.pattern, size (inputSize model), onInput PatternChange ] []
+    [ text "Pattern"
+    , div [] 
+      [ textarea 
+        [ placeholder "pattern"
+        , cols 90
+        , rows (textAreaSize model)
+        , value model.pattern
+        , onInput PatternChange 
         ]
+        []
+      ]
     , div []
         [ text "Limit output to: " 
         , input [ placeholder "limit", value (String.fromInt model.limit), onInput LimitChange ] []
         ]
     , hr [] []
     , div [] [ text ("Possible Combinations: " ++ (String.fromInt model.count)) ]
-    , combinationsUl model
+    , combinationsHtml model
     ]
-  
   
 
 limitExceedText : Model -> String
@@ -483,16 +520,26 @@ limitExceedText model =
   "Only showing first " ++ (String.fromInt model.limit) ++ " combinations!" 
 
 
-combinationsUl : Model -> Html Msg
-combinationsUl model =
+combinationsHtml : Model -> Html Msg
+combinationsHtml model =
   let 
     makeLi = \str -> li [] [ text str ]
   in
     if model.count >= model.limit then
-      ul [] (List.map makeLi (List.take model.limit model.combinations))
+      ol [] (List.map makeLi (List.take model.limit model.combinations))
     else
-      ul [] (List.map makeLi model.combinations)
+      ol [] (List.map makeLi model.combinations)
 
+
+textAreaSize : Model -> Int
+textAreaSize model =
+  let 
+    compare = 
+      \c ->
+        if (c == '\n') then 1
+        else 0
+  in
+    1 + (List.sum (List.map compare (String.toList model.pattern)))
 
 inputSize : Model -> Int
 inputSize model =

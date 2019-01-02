@@ -6458,10 +6458,10 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	}
 };
 var elm$html$Html$li = _VirtualDom_node('li');
+var elm$html$Html$ol = _VirtualDom_node('ol');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
-var elm$html$Html$ul = _VirtualDom_node('ul');
-var author$project$Main$combinationsUl = function (model) {
+var author$project$Main$combinationsHtml = function (model) {
 	var makeLi = function (str) {
 		return A2(
 			elm$html$Html$li,
@@ -6472,25 +6472,45 @@ var author$project$Main$combinationsUl = function (model) {
 				]));
 	};
 	return (_Utils_cmp(model.count, model.limit) > -1) ? A2(
-		elm$html$Html$ul,
+		elm$html$Html$ol,
 		_List_Nil,
 		A2(
 			elm$core$List$map,
 			makeLi,
 			A2(elm$core$List$take, model.limit, model.combinations))) : A2(
-		elm$html$Html$ul,
+		elm$html$Html$ol,
 		_List_Nil,
 		A2(elm$core$List$map, makeLi, model.combinations));
 };
-var author$project$Main$inputSize = function (model) {
-	return A2(
-		elm$core$Basics$max,
-		20,
-		elm$core$String$length(model.pattern));
+var elm$core$List$sum = function (numbers) {
+	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
+};
+var elm$core$String$foldr = _String_foldr;
+var elm$core$String$toList = function (string) {
+	return A3(elm$core$String$foldr, elm$core$List$cons, _List_Nil, string);
+};
+var author$project$Main$textAreaSize = function (model) {
+	var compare = function (c) {
+		return _Utils_eq(
+			c,
+			_Utils_chr('\n')) ? 1 : 0;
+	};
+	return 1 + elm$core$List$sum(
+		A2(
+			elm$core$List$map,
+			compare,
+			elm$core$String$toList(model.pattern)));
 };
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$html$Html$hr = _VirtualDom_node('hr');
 var elm$html$Html$input = _VirtualDom_node('input');
+var elm$html$Html$textarea = _VirtualDom_node('textarea');
+var elm$html$Html$Attributes$cols = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'cols',
+		elm$core$String$fromInt(n));
+};
 var elm$json$Json$Encode$string = _Json_wrap;
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -6500,10 +6520,10 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			elm$json$Json$Encode$string(string));
 	});
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
-var elm$html$Html$Attributes$size = function (n) {
+var elm$html$Html$Attributes$rows = function (n) {
 	return A2(
 		_VirtualDom_attribute,
-		'size',
+		'rows',
 		elm$core$String$fromInt(n));
 };
 var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
@@ -6547,20 +6567,21 @@ var author$project$Main$view = function (model) {
 		_List_Nil,
 		_List_fromArray(
 			[
+				elm$html$Html$text('Pattern'),
 				A2(
 				elm$html$Html$div,
 				_List_Nil,
 				_List_fromArray(
 					[
-						elm$html$Html$text('Pattern: '),
 						A2(
-						elm$html$Html$input,
+						elm$html$Html$textarea,
 						_List_fromArray(
 							[
 								elm$html$Html$Attributes$placeholder('pattern'),
+								elm$html$Html$Attributes$cols(90),
+								elm$html$Html$Attributes$rows(
+								author$project$Main$textAreaSize(model)),
 								elm$html$Html$Attributes$value(model.pattern),
-								elm$html$Html$Attributes$size(
-								author$project$Main$inputSize(model)),
 								elm$html$Html$Events$onInput(author$project$Main$PatternChange)
 							]),
 						_List_Nil)
@@ -6591,7 +6612,7 @@ var author$project$Main$view = function (model) {
 						elm$html$Html$text(
 						'Possible Combinations: ' + elm$core$String$fromInt(model.count))
 					])),
-				author$project$Main$combinationsUl(model)
+				author$project$Main$combinationsHtml(model)
 			]));
 };
 var elm$browser$Browser$External = function (a) {
