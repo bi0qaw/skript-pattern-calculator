@@ -2,6 +2,6 @@ body {
   font-family: sans-serif;
 }
 
-textarea {
-  height: auto;
+code {
+  white-space: pre;
 }

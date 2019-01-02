@@ -1,7 +1,7 @@
 import Browser
 import Html exposing (..)
 import Html.Events exposing (onInput)
-import Html.Attributes exposing (placeholder, value, cols, rows)
+import Html.Attributes exposing (placeholder, title, value, cols, rows, name, readonly)
 import Set exposing (Set)
 import Parser as P exposing (Parser, (|.), (|=))
 
@@ -224,18 +224,26 @@ untilFirstHelper patterns =
     [] -> 
       []
 
-    (Optional _) :: _ ->
-      []
-
     p :: ps ->
-      p :: (untilFirstHelper ps)
+      case p of
+        Empty ->
+          untilFirstHelper ps
+        
+        WS ->
+          p :: (untilFirstHelper ps)
+
+        Optional _ ->
+          p :: (untilFirstHelper ps)
+
+        _ ->
+          [p]
 
 
 -- Parser
 
 whitespaceChars : Set Char
 whitespaceChars =
-  Set.fromList [' ', '\r', '\t']
+  Set.fromList [' ', '\r', '\t', '\n']
 
 
 isWhitespace : Char -> Bool
@@ -421,7 +429,12 @@ parseString str =
   
 allCombinations : String -> List String
 allCombinations str =
-  List.map toMatchedString (combinations (parse str))
+  mapToString (combinations (parse str))
+
+
+mapToString : List Pattern -> List String
+mapToString patterns =
+  List.map toMatchedString patterns
 
 
 -- MODEL
@@ -429,22 +442,33 @@ allCombinations str =
 type alias Model 
   = { pattern: String
     , count : Int
+    , countUntilRequired : Int
     , combinations: List String
+    , untilRequiredCombinations: List String
     , limit : Int
+    , show : String
     }
+
+
+emptyModel : Model
+emptyModel =
+  { pattern = ""
+  , count = 0
+  , countUntilRequired = 0
+  , combinations = []
+  , untilRequiredCombinations = []
+  , limit = 100
+  , show = "all"
+  }
 
 
 initPattern : String
 initPattern = "[(all [[of] the]|the)] permissions (from|of) %players%"
 
+
 init : () -> (Model, Cmd Msg)
 init _ =
-  (
-    { pattern = initPattern
-    , combinations = allCombinations initPattern
-    , count = List.length (allCombinations initPattern)
-    , limit = 100
-    }
+  ( updateModel emptyModel initPattern
   , Cmd.none
   )
 
@@ -454,24 +478,16 @@ init _ =
 type Msg 
   = PatternChange String
   | LimitChange String
+  | ChangeShow String
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     PatternChange str ->
-      let 
-        combs = allCombinations str
-        count = List.length combs
-      in
-        (
-          { model 
-          | pattern = str 
-          , count = count
-          , combinations = combs
-          }
-        , Cmd.none
-        )
+      ( updateModel model str
+      , Cmd.none
+      )
 
     LimitChange str ->
       case String.toInt str of
@@ -488,6 +504,29 @@ update msg model =
           , Cmd.none
           )
 
+    ChangeShow show ->
+      ( 
+        { model 
+        | show = show}
+      , Cmd.none
+      )
+
+
+updateModel : Model -> String -> Model
+updateModel model pattern =
+  let
+    pat = parse pattern
+    combs = mapToString (combinations pat)
+    untilRequiredCombs = mapToString (combinations (untilFirstRequired pat))
+  in
+    { model 
+    | pattern = pattern
+    , count = List.length combs
+    , countUntilRequired = List.length untilRequiredCombs
+    , combinations = combs
+    , untilRequiredCombinations = untilRequiredCombs
+    }
+
 
 -- VIEW
 
@@ -498,22 +537,44 @@ view model =
     , div [] 
       [ textarea 
         [ placeholder "pattern"
-        , cols 90
-        , rows (textAreaSize model)
+        , cols textareaCols
+        , rows (patternInputRows model)
         , value model.pattern
         , onInput PatternChange 
         ]
         []
+      ]
+    , div [ title showTitle ] 
+      [ text "Show: "
+      , select [ onInput ChangeShow ] 
+          [ option [ value "all" ] [ text "All" ]
+          , option [ value "until_first_required" ] [ text "Until First Required" ]
+          ]
       ]
     , div []
         [ text "Limit output to: " 
         , input [ placeholder "limit", value (String.fromInt model.limit), onInput LimitChange ] []
         ]
     , hr [] []
-    , div [] [ text ("Possible Combinations: " ++ (String.fromInt model.count)) ]
+    , div [] [ text ("All Combinations: " ++ (String.fromInt model.count)) ]
+    , div [] [ text ("Until First Required Combinations: " ++ (String.fromInt model.countUntilRequired)) ]
+    , hr [] []
     , combinationsHtml model
     ]
-  
+
+
+showTitle : String
+showTitle =
+  List.foldr (++) "" 
+    [ "'All' shows all possible combinations.\n"
+    , "'Until First Required' shows all possible beginnings of the pattern "
+    , "until it finds a required element."
+    ]
+
+
+textareaCols : Int
+textareaCols = 80
+
 
 limitExceedText : Model -> String
 limitExceedText model =
@@ -523,16 +584,26 @@ limitExceedText model =
 combinationsHtml : Model -> Html Msg
 combinationsHtml model =
   let 
-    makeLi = \str -> li [] [ text str ]
+    patterns = 
+      case model.show of 
+        "all" ->
+          model.combinations
+        
+        "until_first_required" ->
+          model.untilRequiredCombinations
+
+        _ ->
+          []
+    
+    lines = List.intersperse "\n" patterns
+    str = List.foldr (++) "" lines
   in
-    if model.count >= model.limit then
-      ol [] (List.map makeLi (List.take model.limit model.combinations))
-    else
-      ol [] (List.map makeLi model.combinations)
+    -- div [] [ textarea [ value str , cols textareaCols, rows (1 + (List.length patterns)), readonly True ] [] ]
+    div [] [ code [] (List.map (\p -> text p) lines) ]
 
 
-textAreaSize : Model -> Int
-textAreaSize model =
+patternInputRows : Model -> Int
+patternInputRows model =
   let 
     compare = 
       \c ->
@@ -540,6 +611,7 @@ textAreaSize model =
         else 0
   in
     1 + (List.sum (List.map compare (String.toList model.pattern)))
+
 
 inputSize : Model -> Int
 inputSize model =

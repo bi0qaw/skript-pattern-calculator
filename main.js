@@ -4440,18 +4440,6 @@ function _Browser_load(url)
 		}
 	}));
 }
-var author$project$Main$Empty = {$: 'Empty'};
-var author$project$Main$Grouped = function (a) {
-	return {$: 'Grouped', a: a};
-};
-var author$project$Main$Regex = function (a) {
-	return {$: 'Regex', a: a};
-};
-var author$project$Main$WS = {$: 'WS'};
-var author$project$Main$And = F2(
-	function (a, b) {
-		return {$: 'And', a: a, b: b};
-	});
 var elm$core$Basics$EQ = {$: 'EQ'};
 var elm$core$Basics$LT = {$: 'LT'};
 var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
@@ -4475,6 +4463,7 @@ var elm$core$Array$foldr = F3(
 			A3(elm$core$Elm$JsArray$foldr, func, baseCase, tail),
 			tree);
 	});
+var elm$core$List$cons = _List_cons;
 var elm$core$Array$toList = function (array) {
 	return A3(elm$core$Array$foldr, elm$core$List$cons, _List_Nil, array);
 };
@@ -4531,7 +4520,20 @@ var elm$core$Set$toList = function (_n0) {
 	var dict = _n0.a;
 	return elm$core$Dict$keys(dict);
 };
-var elm$core$List$cons = _List_cons;
+var author$project$Main$emptyModel = {combinations: _List_Nil, count: 0, countUntilRequired: 0, limit: 100, pattern: '', show: 'all', untilRequiredCombinations: _List_Nil};
+var author$project$Main$initPattern = '[(all [[of] the]|the)] permissions (from|of) %players%';
+var author$project$Main$Empty = {$: 'Empty'};
+var author$project$Main$Grouped = function (a) {
+	return {$: 'Grouped', a: a};
+};
+var author$project$Main$Regex = function (a) {
+	return {$: 'Regex', a: a};
+};
+var author$project$Main$WS = {$: 'WS'};
+var author$project$Main$And = F2(
+	function (a, b) {
+		return {$: 'And', a: a, b: b};
+	});
 var elm$core$Basics$add = _Basics_add;
 var elm$core$Basics$gt = _Utils_gt;
 var elm$core$List$foldl = F3(
@@ -4697,6 +4699,48 @@ var author$project$Main$combinations = function (pattern) {
 				author$project$Main$Regex,
 				author$project$Main$combinations(pat));
 	}
+};
+var elm$core$Basics$append = _Utils_append;
+var author$project$Main$toMatchedString = function (pattern) {
+	toMatchedString:
+	while (true) {
+		switch (pattern.$) {
+			case 'Empty':
+				return '';
+			case 'WS':
+				return ' ';
+			case 'Literal':
+				var str = pattern.a;
+				return str;
+			case 'And':
+				var left = pattern.a;
+				var right = pattern.b;
+				return _Utils_ap(
+					author$project$Main$toMatchedString(left),
+					author$project$Main$toMatchedString(right));
+			case 'Optional':
+				var pat = pattern.a;
+				var $temp$pattern = pat;
+				pattern = $temp$pattern;
+				continue toMatchedString;
+			case 'Grouped':
+				var pat = pattern.a;
+				var $temp$pattern = pat;
+				pattern = $temp$pattern;
+				continue toMatchedString;
+			case 'Or':
+				return 'UNEXPECTED OR!';
+			case 'Expression':
+				var str = pattern.a;
+				return '%' + (str + '%');
+			default:
+				var pat = pattern.a;
+				return '<' + (author$project$Main$toMatchedString(pat) + '>');
+		}
+	}
+};
+var author$project$Main$mapToString = function (patterns) {
+	return A2(elm$core$List$map, author$project$Main$toMatchedString, patterns);
 };
 var author$project$Main$Optional = function (a) {
 	return {$: 'Optional', a: a};
@@ -5069,7 +5113,8 @@ var author$project$Main$whitespaceChars = elm$core$Set$fromList(
 		[
 			_Utils_chr(' '),
 			_Utils_chr('\r'),
-			_Utils_chr('\t')
+			_Utils_chr('\t'),
+			_Utils_chr('\n')
 		]));
 var elm$core$Dict$foldl = F3(
 	function (func, acc, dict) {
@@ -5870,53 +5915,57 @@ var author$project$Main$parse = function (str) {
 		return author$project$Main$Empty;
 	}
 };
-var elm$core$Basics$append = _Utils_append;
-var author$project$Main$toMatchedString = function (pattern) {
-	toMatchedString:
+var author$project$Main$toList = function (pattern) {
+	switch (pattern.$) {
+		case 'Empty':
+			return _List_Nil;
+		case 'And':
+			var left = pattern.a;
+			var right = pattern.b;
+			return A2(
+				elm$core$List$append,
+				author$project$Main$toList(left),
+				author$project$Main$toList(right));
+		default:
+			return _List_fromArray(
+				[pattern]);
+	}
+};
+var author$project$Main$untilFirstHelper = function (patterns) {
+	untilFirstHelper:
 	while (true) {
-		switch (pattern.$) {
-			case 'Empty':
-				return '';
-			case 'WS':
-				return ' ';
-			case 'Literal':
-				var str = pattern.a;
-				return str;
-			case 'And':
-				var left = pattern.a;
-				var right = pattern.b;
-				return _Utils_ap(
-					author$project$Main$toMatchedString(left),
-					author$project$Main$toMatchedString(right));
-			case 'Optional':
-				var pat = pattern.a;
-				var $temp$pattern = pat;
-				pattern = $temp$pattern;
-				continue toMatchedString;
-			case 'Grouped':
-				var pat = pattern.a;
-				var $temp$pattern = pat;
-				pattern = $temp$pattern;
-				continue toMatchedString;
-			case 'Or':
-				return 'UNEXPECTED OR!';
-			case 'Expression':
-				var str = pattern.a;
-				return '%' + (str + '%');
-			default:
-				var pat = pattern.a;
-				return '<' + (author$project$Main$toMatchedString(pat) + '>');
+		if (!patterns.b) {
+			return _List_Nil;
+		} else {
+			var p = patterns.a;
+			var ps = patterns.b;
+			switch (p.$) {
+				case 'Empty':
+					var $temp$patterns = ps;
+					patterns = $temp$patterns;
+					continue untilFirstHelper;
+				case 'WS':
+					return A2(
+						elm$core$List$cons,
+						p,
+						author$project$Main$untilFirstHelper(ps));
+				case 'Optional':
+					return A2(
+						elm$core$List$cons,
+						p,
+						author$project$Main$untilFirstHelper(ps));
+				default:
+					return _List_fromArray(
+						[p]);
+			}
 		}
 	}
 };
-var author$project$Main$allCombinations = function (str) {
-	return A2(
-		elm$core$List$map,
-		author$project$Main$toMatchedString,
-		author$project$Main$combinations(
-			author$project$Main$parse(str)));
+var author$project$Main$untilFirstRequired = function (pattern) {
+	return author$project$Main$reduceAndSequence(
+		author$project$Main$untilFirstHelper(
+			author$project$Main$toList(pattern)));
 };
-var author$project$Main$initPattern = '[(all [[of] the]|the)] permissions (from|of) %players%';
 var elm$core$List$length = function (xs) {
 	return A3(
 		elm$core$List$foldl,
@@ -5927,6 +5976,24 @@ var elm$core$List$length = function (xs) {
 		0,
 		xs);
 };
+var author$project$Main$updateModel = F2(
+	function (model, pattern) {
+		var pat = author$project$Main$parse(pattern);
+		var untilRequiredCombs = author$project$Main$mapToString(
+			author$project$Main$combinations(
+				author$project$Main$untilFirstRequired(pat)));
+		var combs = author$project$Main$mapToString(
+			author$project$Main$combinations(pat));
+		return _Utils_update(
+			model,
+			{
+				combinations: combs,
+				count: elm$core$List$length(combs),
+				countUntilRequired: elm$core$List$length(untilRequiredCombs),
+				pattern: pattern,
+				untilRequiredCombinations: untilRequiredCombs
+			});
+	});
 var elm$core$Result$isOk = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -6268,13 +6335,7 @@ var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
-		{
-			combinations: author$project$Main$allCombinations(author$project$Main$initPattern),
-			count: elm$core$List$length(
-				author$project$Main$allCombinations(author$project$Main$initPattern)),
-			limit: 100,
-			pattern: author$project$Main$initPattern
-		},
+		A2(author$project$Main$updateModel, author$project$Main$emptyModel, author$project$Main$initPattern),
 		elm$core$Platform$Cmd$none);
 };
 var elm$core$Platform$Sub$batch = _Platform_batch;
@@ -6285,162 +6346,60 @@ var author$project$Main$subscriptions = function (_n0) {
 var elm$core$String$toInt = _String_toInt;
 var author$project$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'PatternChange') {
-			var str = msg.a;
-			var combs = author$project$Main$allCombinations(str);
-			var count = elm$core$List$length(combs);
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{combinations: combs, count: count, pattern: str}),
-				elm$core$Platform$Cmd$none);
-		} else {
-			var str = msg.a;
-			var _n1 = elm$core$String$toInt(str);
-			if (_n1.$ === 'Just') {
-				var limit = _n1.a;
+		switch (msg.$) {
+			case 'PatternChange':
+				var str = msg.a;
+				return _Utils_Tuple2(
+					A2(author$project$Main$updateModel, model, str),
+					elm$core$Platform$Cmd$none);
+			case 'LimitChange':
+				var str = msg.a;
+				var _n1 = elm$core$String$toInt(str);
+				if (_n1.$ === 'Just') {
+					var limit = _n1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{limit: limit}),
+						elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				}
+			default:
+				var show = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{limit: limit}),
+						{show: show}),
 					elm$core$Platform$Cmd$none);
-			} else {
-				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-			}
 		}
 	});
+var author$project$Main$ChangeShow = function (a) {
+	return {$: 'ChangeShow', a: a};
+};
 var author$project$Main$LimitChange = function (a) {
 	return {$: 'LimitChange', a: a};
 };
 var author$project$Main$PatternChange = function (a) {
 	return {$: 'PatternChange', a: a};
 };
-var elm$core$Basics$ge = _Utils_ge;
-var elm$core$List$takeReverse = F3(
-	function (n, list, kept) {
-		takeReverse:
-		while (true) {
-			if (n <= 0) {
-				return kept;
-			} else {
-				if (!list.b) {
-					return kept;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs,
-						$temp$kept = A2(elm$core$List$cons, x, kept);
-					n = $temp$n;
-					list = $temp$list;
-					kept = $temp$kept;
-					continue takeReverse;
-				}
-			}
-		}
-	});
-var elm$core$List$takeTailRec = F2(
-	function (n, list) {
-		return elm$core$List$reverse(
-			A3(elm$core$List$takeReverse, n, list, _List_Nil));
-	});
-var elm$core$List$takeFast = F3(
-	function (ctr, n, list) {
-		if (n <= 0) {
+var elm$core$List$intersperse = F2(
+	function (sep, xs) {
+		if (!xs.b) {
 			return _List_Nil;
 		} else {
-			var _n0 = _Utils_Tuple2(n, list);
-			_n0$1:
-			while (true) {
-				_n0$5:
-				while (true) {
-					if (!_n0.b.b) {
-						return list;
-					} else {
-						if (_n0.b.b.b) {
-							switch (_n0.a) {
-								case 1:
-									break _n0$1;
-								case 2:
-									var _n2 = _n0.b;
-									var x = _n2.a;
-									var _n3 = _n2.b;
-									var y = _n3.a;
-									return _List_fromArray(
-										[x, y]);
-								case 3:
-									if (_n0.b.b.b.b) {
-										var _n4 = _n0.b;
-										var x = _n4.a;
-										var _n5 = _n4.b;
-										var y = _n5.a;
-										var _n6 = _n5.b;
-										var z = _n6.a;
-										return _List_fromArray(
-											[x, y, z]);
-									} else {
-										break _n0$5;
-									}
-								default:
-									if (_n0.b.b.b.b && _n0.b.b.b.b.b) {
-										var _n7 = _n0.b;
-										var x = _n7.a;
-										var _n8 = _n7.b;
-										var y = _n8.a;
-										var _n9 = _n8.b;
-										var z = _n9.a;
-										var _n10 = _n9.b;
-										var w = _n10.a;
-										var tl = _n10.b;
-										return (ctr > 1000) ? A2(
-											elm$core$List$cons,
-											x,
-											A2(
-												elm$core$List$cons,
-												y,
-												A2(
-													elm$core$List$cons,
-													z,
-													A2(
-														elm$core$List$cons,
-														w,
-														A2(elm$core$List$takeTailRec, n - 4, tl))))) : A2(
-											elm$core$List$cons,
-											x,
-											A2(
-												elm$core$List$cons,
-												y,
-												A2(
-													elm$core$List$cons,
-													z,
-													A2(
-														elm$core$List$cons,
-														w,
-														A3(elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
-									} else {
-										break _n0$5;
-									}
-							}
-						} else {
-							if (_n0.a === 1) {
-								break _n0$1;
-							} else {
-								break _n0$5;
-							}
-						}
-					}
-				}
-				return list;
-			}
-			var _n1 = _n0.b;
-			var x = _n1.a;
-			return _List_fromArray(
-				[x]);
+			var hd = xs.a;
+			var tl = xs.b;
+			var step = F2(
+				function (x, rest) {
+					return A2(
+						elm$core$List$cons,
+						sep,
+						A2(elm$core$List$cons, x, rest));
+				});
+			var spersed = A3(elm$core$List$foldr, step, _List_Nil, tl);
+			return A2(elm$core$List$cons, hd, spersed);
 		}
-	});
-var elm$core$List$take = F2(
-	function (n, list) {
-		return A3(elm$core$List$takeFast, 0, n, list);
 	});
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$json$Json$Decode$map2 = _Json_map2;
@@ -6457,30 +6416,39 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 			return 3;
 	}
 };
-var elm$html$Html$li = _VirtualDom_node('li');
-var elm$html$Html$ol = _VirtualDom_node('ol');
+var elm$html$Html$code = _VirtualDom_node('code');
+var elm$html$Html$div = _VirtualDom_node('div');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var author$project$Main$combinationsHtml = function (model) {
-	var makeLi = function (str) {
-		return A2(
-			elm$html$Html$li,
-			_List_Nil,
-			_List_fromArray(
-				[
-					elm$html$Html$text(str)
-				]));
-	};
-	return (_Utils_cmp(model.count, model.limit) > -1) ? A2(
-		elm$html$Html$ol,
+	var patterns = function () {
+		var _n0 = model.show;
+		switch (_n0) {
+			case 'all':
+				return model.combinations;
+			case 'until_first_required':
+				return model.untilRequiredCombinations;
+			default:
+				return _List_Nil;
+		}
+	}();
+	var lines = A2(elm$core$List$intersperse, '\n', patterns);
+	var str = A3(elm$core$List$foldr, elm$core$Basics$append, '', lines);
+	return A2(
+		elm$html$Html$div,
 		_List_Nil,
-		A2(
-			elm$core$List$map,
-			makeLi,
-			A2(elm$core$List$take, model.limit, model.combinations))) : A2(
-		elm$html$Html$ol,
-		_List_Nil,
-		A2(elm$core$List$map, makeLi, model.combinations));
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$code,
+				_List_Nil,
+				A2(
+					elm$core$List$map,
+					function (p) {
+						return elm$html$Html$text(p);
+					},
+					lines))
+			]));
 };
 var elm$core$List$sum = function (numbers) {
 	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
@@ -6489,7 +6457,7 @@ var elm$core$String$foldr = _String_foldr;
 var elm$core$String$toList = function (string) {
 	return A3(elm$core$String$foldr, elm$core$List$cons, _List_Nil, string);
 };
-var author$project$Main$textAreaSize = function (model) {
+var author$project$Main$patternInputRows = function (model) {
 	var compare = function (c) {
 		return _Utils_eq(
 			c,
@@ -6501,9 +6469,17 @@ var author$project$Main$textAreaSize = function (model) {
 			compare,
 			elm$core$String$toList(model.pattern)));
 };
-var elm$html$Html$div = _VirtualDom_node('div');
+var author$project$Main$showTitle = A3(
+	elm$core$List$foldr,
+	elm$core$Basics$append,
+	'',
+	_List_fromArray(
+		['\'All\' shows all possible combinations.\n', '\'Until First Required\' shows all possible beginnings of the pattern ', 'until it finds a required element.']));
+var author$project$Main$textareaCols = 80;
 var elm$html$Html$hr = _VirtualDom_node('hr');
 var elm$html$Html$input = _VirtualDom_node('input');
+var elm$html$Html$option = _VirtualDom_node('option');
+var elm$html$Html$select = _VirtualDom_node('select');
 var elm$html$Html$textarea = _VirtualDom_node('textarea');
 var elm$html$Html$Attributes$cols = function (n) {
 	return A2(
@@ -6526,6 +6502,7 @@ var elm$html$Html$Attributes$rows = function (n) {
 		'rows',
 		elm$core$String$fromInt(n));
 };
+var elm$html$Html$Attributes$title = elm$html$Html$Attributes$stringProperty('title');
 var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
@@ -6578,13 +6555,52 @@ var author$project$Main$view = function (model) {
 						_List_fromArray(
 							[
 								elm$html$Html$Attributes$placeholder('pattern'),
-								elm$html$Html$Attributes$cols(90),
+								elm$html$Html$Attributes$cols(author$project$Main$textareaCols),
 								elm$html$Html$Attributes$rows(
-								author$project$Main$textAreaSize(model)),
+								author$project$Main$patternInputRows(model)),
 								elm$html$Html$Attributes$value(model.pattern),
 								elm$html$Html$Events$onInput(author$project$Main$PatternChange)
 							]),
 						_List_Nil)
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$title(author$project$Main$showTitle)
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text('Show: '),
+						A2(
+						elm$html$Html$select,
+						_List_fromArray(
+							[
+								elm$html$Html$Events$onInput(author$project$Main$ChangeShow)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$option,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$value('all')
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text('All')
+									])),
+								A2(
+								elm$html$Html$option,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$value('until_first_required')
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text('Until First Required')
+									]))
+							]))
 					])),
 				A2(
 				elm$html$Html$div,
@@ -6610,8 +6626,17 @@ var author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						elm$html$Html$text(
-						'Possible Combinations: ' + elm$core$String$fromInt(model.count))
+						'All Combinations: ' + elm$core$String$fromInt(model.count))
 					])),
+				A2(
+				elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$text(
+						'Until First Required Combinations: ' + elm$core$String$fromInt(model.countUntilRequired))
+					])),
+				A2(elm$html$Html$hr, _List_Nil, _List_Nil),
 				author$project$Main$combinationsHtml(model)
 			]));
 };
