@@ -1,4 +1,4 @@
-import Browser
+import Browser exposing (Document)
 import Html exposing (..)
 import Html.Events exposing (onInput)
 import Html.Attributes exposing (placeholder, value, size)
@@ -6,7 +6,12 @@ import Set exposing (Set)
 import Parser as P exposing (Parser, (|.), (|=))
 
 main =
-  Browser.sandbox { init = init, update = update, view = view }
+  Browser.element 
+    { init = init
+    , view = view
+    , update = update
+    , subscriptions = subscriptions 
+    }
 
 
 -- Pattern
@@ -401,13 +406,16 @@ type alias Model
 initPattern : String
 initPattern = "[(all [[of] the]|the)] permissions (from|of) %players%"
 
-init : Model
-init =
-  { pattern = initPattern
-  , combinations = allCombinations initPattern
-  , count = List.length (allCombinations initPattern)
-  , limit = 100
-  }
+init : () -> (Model, Cmd Msg)
+init _ =
+  (
+    { pattern = initPattern
+    , combinations = allCombinations initPattern
+    , count = List.length (allCombinations initPattern)
+    , limit = 100
+    }
+  , Cmd.none
+  )
 
 
 -- UPDATE
@@ -417,7 +425,7 @@ type Msg
   | LimitChange String
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     PatternChange str ->
@@ -425,21 +433,29 @@ update msg model =
         combs = allCombinations str
         count = List.length combs
       in
-        { model 
-        | pattern = str 
-        , count = count
-        , combinations = combs
-        }
+        (
+          { model 
+          | pattern = str 
+          , count = count
+          , combinations = combs
+          }
+        , Cmd.none
+        )
 
     LimitChange str ->
       case String.toInt str of
         Just limit ->
-          { model 
-          | limit = limit
-          }
+          (
+            { model 
+            | limit = limit
+            }
+          , Cmd.none
+          )
 
         Nothing ->
-          model
+          ( model
+          , Cmd.none
+          )
 
 
 -- VIEW
@@ -459,6 +475,7 @@ view model =
     , div [] [ text ("Possible Combinations: " ++ (String.fromInt model.count)) ]
     , combinationsUl model
     ]
+  
   
 
 limitExceedText : Model -> String
@@ -480,3 +497,10 @@ combinationsUl model =
 inputSize : Model -> Int
 inputSize model =
   max 20 (String.length model.pattern)
+
+
+-- Subscriptions
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+  Sub.none
