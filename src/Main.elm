@@ -490,19 +490,27 @@ update msg model =
       )
 
     LimitChange str ->
-      case String.toInt str of
-        Just limit ->
-          (
-            { model 
-            | limit = limit
-            }
+      if ((String.length str) == 0) then
+        (
+          { model 
+          | limit = 0
+          }
           , Cmd.none
-          )
+        )
+      else
+        case String.toInt str of
+          Just limit ->
+            (
+              { model 
+              | limit = limit
+              }
+            , Cmd.none
+            )
 
-        Nothing ->
-          ( model
-          , Cmd.none
-          )
+          Nothing ->
+            ( model
+            , Cmd.none
+            )
 
     ChangeShow show ->
       ( 
@@ -594,9 +602,14 @@ combinationsHtml model =
 
         _ ->
           []
-    
-    lines = List.intersperse "\n" patterns
+    count = List.length patterns
+    lines = 
+      if (count > model.limit) then
+        List.intersperse "\n" (List.take model.limit patterns)
+      else
+        List.intersperse "\n" patterns
     str = List.foldr (++) "" lines
+    
   in
     div [ class "combinations" ] [ code [] (List.map (\p -> text p) lines) ]
 
