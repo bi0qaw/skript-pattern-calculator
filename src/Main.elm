@@ -156,7 +156,7 @@ condense pattern =
         
         p ->
           Regex p
-
+          
 
 combinations : Pattern -> List Pattern
 combinations pattern =
