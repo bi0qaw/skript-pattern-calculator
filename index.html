@@ -7,8 +7,6 @@
 	<title>Skript Pattern Calculator</title>
 	<link type="text/css" rel="stylesheet" href="css/style.css"/>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
-	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="main.js"></script>
 
 	<meta name="description" content="Convert a skript pattern into a syntax">
@@ -46,18 +44,9 @@
 		node: document.getElementById('elm')
 		});
 
-$(document).ready(function() {
-	var code = $("code").text();
-	$("textarea").addClass("textarea").addClass("is-6").addClass("is-4-mobile");
-	$("input").addClass("input").addClass("is-6").addClass("is-4-mobile");
-	$(".combinations").html('<textarea class="textarea" style="height: 300px;" readonly>'+ code + '</textarea>');
-	$(".show").html('<h3 class="subtitle down">Show:</h3><div class="select"><select><option value="all">All</option><option value="until_first_required">Until First Required</option></select></div>');
-	$(".output_limit").html('<h3 class="subtitle down">Limit output to:</h3><input placeholder="limit" value="10" class="input is-6 is-4-mobile">');
-	$(".pattern_input textarea").text("[(all [[of] the]|the)] permissions (from|of) %players%");
-	var patternTitle = $(".main").html();
-	patternTitle = patternTitle.replace('Pattern', '<h3 class="subtitle">Pattern</h3>');
-	$(".main").html(patternTitle);
-});
+//var code = document.querySelector('code').textContent;
+document.querySelector('textarea').classList.add("textarea");
+document.querySelector('input').classList.add("input");
 	</script>
 </body>
 </html>
