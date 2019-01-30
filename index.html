@@ -5,48 +5,22 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>Skript Pattern Calculator</title>
-	<link type="text/css" rel="stylesheet" href="css/style.css"/>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
 	<script src="main.js"></script>
 
 	<meta name="description" content="Convert a skript pattern into a syntax">
-	<meta name="theme-color" content="#90d5f9">
 
 	<meta property="og:title" content="Skript Pattern Calculator">
 	<meta property="og:description" content="Convert a skript pattern into a syntax">
 	<meta property="og:url" content="https://bi0qaw.github.io/skript-pattern-calculator/">
 	<meta property="og:site_name" content="Skript Pattern Calculator">
 
-<style>
-.down {margin-top: 3%;}
-.title-background {
-	background-color: brown;
-	color: white;
-	text-align: center;
-}
-</style>
-
 </head>
 <body>
-	<div class="columns has-text-centered down">
-		<div class="column is-5 is-offset-4">
-			<h1 class="title-background title">Skript Pattern Calculator</h1>
-		</div>
-	</div>
-	
-	<div class="container down">
-		<div id="elm"></div>
-	</div>	
-	<br><br>
-
+	<div id="elm"></div>
 	<script>
 		var app = Elm.Main.init({
-		node: document.getElementById('elm')
+			node: document.getElementById('elm')
 		});
-
-//var code = document.querySelector('code').textContent;
-document.querySelector('textarea').classList.add("textarea");
-document.querySelector('input').classList.add("input");
 	</script>
 </body>
 </html>
